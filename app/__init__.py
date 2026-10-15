@@ -1,27 +1,16 @@
 from flask import Flask
-from .config import Config
-from .extensions import db, migrate, cors
+from flask_cors import CORS
+from .extensions import db
+from .routes import auth, categories, transactions, dashboard, reports
 
-def create_app(config_class=Config):
+def create_app():
     app = Flask(__name__)
-    app.config.from_object(config_class)
-
-    # Initialize extensions
+    app.config.from_object('app.config.Config')
+    CORS(app)
     db.init_app(app)
-    migrate.init_app(app, db)
-    cors.init_app(app, resources={r"/api/*": {"origins": "*"}}) # Allow all for now, restrict in production
-
-    # Register Blueprints
-    from .models import User, Category, Transaction, Budget
-    from .routes import auth, categories, transactions, dashboard
-    
     app.register_blueprint(auth.bp)
     app.register_blueprint(categories.bp)
     app.register_blueprint(transactions.bp)
     app.register_blueprint(dashboard.bp)
-    
-    @app.route("/api/health")
-    def health_check():
-        return {"status": "ok"}
-
+    app.register_blueprint(reports.reports_bp)
     return app
